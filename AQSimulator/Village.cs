@@ -105,15 +105,17 @@ namespace AQSimulator {
 		}
 
 		public IEnumerable<GridPoint> SearchClosedFacilityDetailPoints(GridPoint detailPoint, int limitCount) {
-			SortedList<int, GridPoint> closedList = new SortedList<int, GridPoint>();
+//			Console.Out.WriteLine("SearchClosedFacilityDetailPoints");
+			SortedList <int, GridPoint> closedList = new SortedList<int, GridPoint>();
 			foreach (var facility in facilities) {
 				foreach(var gridPointDistance in facility.GetAllPoints().SelectMany(p=>p.GetDetailsFromVillage())
 					.Select(p=>new GridPointDistance() { GP = p, SqrDistance = p.SqrDistance(detailPoint) }).WhereMin(d=>d.SqrDistance)) {
+//					Console.Out.WriteLine("facility:"+facility.GetAllPoints().Count()+" sqrDistance:"+gridPointDistance.SqrDistance);
 					if (closedList.ContainsKey(gridPointDistance.SqrDistance) == false) {
 						closedList.Add(gridPointDistance.SqrDistance, gridPointDistance.GP);
 					}
 					else {
-						Console.Error.WriteLine("等距離の施設を検出。計算結果が変わる可能性があります");
+						Console.Out.WriteLine("等距離の施設を検出。計算結果が変わる可能性があります");
 					}
 					if(closedList.Count > limitCount) {
 						closedList.Remove(closedList.Keys.Last());
@@ -307,14 +309,65 @@ namespace AQSimulator {
 
 	[Serializable]
 	public class CommonFacilityType : GridElementType<Facility> {
-		public static CommonFacilityType Instance2x2 = new CommonFacilityType(2,2);
-		public static CommonFacilityType Instance3x3 = new CommonFacilityType(3,3);
+		public static CommonFacilityType Instance2x2 = new CommonFacilityType(2,2,
+			new int[,] {
+				{0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
+				{1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
+
+				{1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
+				{1,1, 1,1, 1,1, 1,1, 0,0, 0,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 1,0, 0,0,},
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+
+				{2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+			}
+		);
+
+		public static CommonFacilityType Instance3x3 = new CommonFacilityType(3,3,
+			new int[,] {
+				{0,0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
+				{1,1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
+
+				{1,1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 0,0, 0,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 1,0, 0,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+			}
+			);
 		public static CommonFacilityType Instance4x4 = new CommonFacilityType(4,4);
 		public static CommonFacilityType Instance5x5 = new CommonFacilityType(5,5);
 
-		private CommonFacilityType(int wx, int wy) {
+		private int[,] aqRangeMatrix;
+
+		private CommonFacilityType(int wx, int wy, int[,] aqRangeMatrix = null) {
 			sizeX = wx;
 			sizeY = wy;
+			this.aqRangeMatrix = aqRangeMatrix;
+		}
+
+		public int[,] AQRangeMatrix {
+			get {
+				return aqRangeMatrix;
+			}
 		}
 	}
 }

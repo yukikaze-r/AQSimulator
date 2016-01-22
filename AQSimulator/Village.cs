@@ -23,6 +23,22 @@ namespace AQSimulator {
 		[field: NonSerialized]
 		public event Action<GridPoint> OnGridChanged = delegate { };
 
+		[OnDeserialized]
+		private void SetValuesOnDeserialized(StreamingContext context) {
+			List<Facility> removed = new List<Facility>();
+			foreach(var f in facilities) {
+				foreach(var p in f.GetAllPoints()) {
+					if(this[p] != f) {
+						removed.Add(f);
+						Console.Out.WriteLine("Broken facility found");
+					}
+				}
+			}
+			foreach(var r in removed) {
+				facilities.Remove(r);
+			}
+		}
+
 		public int SizeX {
 			get {
 				return sizeX;
@@ -82,9 +98,9 @@ namespace AQSimulator {
 				foreach(var gp in t.GetAllPoints()) {
 					this[gp] = t;
 				}
-			}
-			if(t is Facility) {
-				facilities.Add((Facility)t);
+				if (t is Facility) {
+					facilities.Add((Facility)t);
+				}
 			}
 			return t;
 		}
@@ -104,24 +120,46 @@ namespace AQSimulator {
 			return elem;
 		}
 
-		public IEnumerable<GridPoint> SearchClosedFacilityDetailPoints(GridPoint detailPoint, int limitCount) {
+		public IEnumerable<Facility> SearchClosedFacilityDetailPoints(GridPoint detailPoint, int limitCount) {
 //			Console.Out.WriteLine("SearchClosedFacilityDetailPoints");
-			SortedList <int, GridPoint> closedList = new SortedList<int, GridPoint>();
+			SortedList <int, Facility> closedList = new SortedList<int, Facility>();
 			foreach (var facility in facilities) {
 				foreach(var gridPointDistance in facility.GetAllPoints().SelectMany(p=>p.GetDetailsFromVillage())
 					.Select(p=>new GridPointDistance() { GP = p, SqrDistance = p.SqrDistance(detailPoint) }).WhereMin(d=>d.SqrDistance)) {
 //					Console.Out.WriteLine("facility:"+facility.GetAllPoints().Count()+" sqrDistance:"+gridPointDistance.SqrDistance);
 					if (closedList.ContainsKey(gridPointDistance.SqrDistance) == false) {
-						closedList.Add(gridPointDistance.SqrDistance, gridPointDistance.GP);
+						closedList.Add(gridPointDistance.SqrDistance, facility);
 					}
 					else {
-						Console.Out.WriteLine("等距離の施設を検出。計算結果が変わる可能性があります");
+						Console.Out.WriteLine("等距離の施設を検出。計算結果が変わる可能性があります (" + closedList[gridPointDistance.SqrDistance].FacilityID + "==" + facility.FacilityID + ")");
 					}
-					if(closedList.Count > limitCount) {
+					if (closedList.Count > limitCount) {
 						closedList.Remove(closedList.Keys.Last());
 					}
 				}
 			}
+			return closedList.Values;
+		}
+
+		public IEnumerable<Facility> SearchClosedFacility(ElementPoint elementPoint, int limitCount) {
+			SortedList<float, Facility> closedList = new SortedList<float, Facility>();
+			foreach (var facility in facilities) {
+				var sqrDistance = facility.ElementPoint.SqrDistance(elementPoint);
+
+				if (closedList.ContainsKey(sqrDistance) == false) {
+					closedList.Add(sqrDistance, facility);
+				} else {
+					Console.Out.WriteLine("等距離の施設を検出。計算結果が変わる可能性があります ("+ closedList[sqrDistance].FacilityID+"=="+ facility.FacilityID+")");
+				}
+				if (closedList.Count > limitCount) {
+					closedList.Remove(closedList.Keys.Last());
+				}
+			}
+			foreach(var f in closedList) {
+				Console.Out.Write(" " + f.Value.FacilityID+"("+Math.Sqrt(f.Key)+")");
+			}
+			Console.Out.WriteLine("");
+
 			return closedList.Values;
 		}
 
@@ -203,6 +241,17 @@ namespace AQSimulator {
 		}
 	}
 
+	public struct ElementPoint {
+		public float X;
+		public float Y;
+
+		public float SqrDistance(ElementPoint p) {
+			float dx = p.X - X;
+			float dy = p.Y - Y;
+			return dx * dx + dy * dy;
+		}
+	}
+
 	[Serializable]
 	public abstract class GridElementType {
 		protected int sizeX;
@@ -249,6 +298,15 @@ namespace AQSimulator {
 			}
 			get {
 				return gridPoint;
+			}
+		}
+
+		public ElementPoint ElementPoint {
+			get {
+				ElementPoint result;
+				result.X = gridPoint.X + (float) this.Type.SizeX / 2;
+				result.Y = gridPoint.Y + (float) this.Type.SizeY / 2;
+				return result;
 			}
 		}
 
@@ -305,6 +363,20 @@ namespace AQSimulator {
 
 	[Serializable]
 	public class Facility : GridElement<Facility> {
+		private static int idCounter = 1;
+
+		public Facility() {
+			FacilityID = idCounter++;
+		}
+
+
+		[OnDeserialized]
+		private void SetValuesOnDeserialized(StreamingContext context) {
+			FacilityID = idCounter++;
+		}
+
+		[NonSerialized]
+		public int FacilityID;
 	}
 
 	[Serializable]

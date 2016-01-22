@@ -70,6 +70,12 @@ namespace AQSimulator {
 				}
 			}
 
+			Font font = new Font("MS UI Gothic", 10);
+			foreach (var facility in village.Facilities) {
+				e.Graphics.DrawString(facility.FacilityID.ToString(), font, Brushes.Black, GetGraphicsPointFromElementPoint(facility.ElementPoint));
+			}
+			font.Dispose();
+
 			if(simulator != null) {
 				DrawAQ(e.Graphics, simulator.AQDetailPoint);
 			}
@@ -139,6 +145,13 @@ namespace AQSimulator {
 			return new Point(
 				(villagePoint.X - villagePoint.Y) * gridElementSize.Width + originalPoint.X,
 				(-villagePoint.X - villagePoint.Y) * gridElementSize.Height + originalPoint.Y);
+		}
+
+
+		private PointF GetGraphicsPointFromElementPoint(ElementPoint elementPoint) {
+			return new PointF(
+				(elementPoint.X - elementPoint.Y) * gridElementSize.Width + originalPoint.X,
+				(-elementPoint.X - elementPoint.Y) * gridElementSize.Height + originalPoint.Y);
 		}
 
 		private GridPoint GetVillagePointFromGraphicsPoint(Point graphicsPoint) {

@@ -33,10 +33,7 @@ namespace AQSimulator {
 
 		public ElementPoint AQElementPoint {
 			get {
-				ElementPoint result;
-				result.X = aqPoint.X * 0.5f + 0.25f;
-				result.Y = aqPoint.Y * 0.5f + 0.25f;
-				return result;
+				return aqPoint.GetElementPointFromDetail();
 			}
 		}
 
@@ -82,25 +79,42 @@ namespace AQSimulator {
 				IEnumerable<GridPoint> attackableArea = facility.GetAllRangeDetailPoints(AQRange).Intersect(
 					village.GetReachableMap().GetAllReachable(this.AQVillagePoint).SelectMany(p => p.GetDetailsFromVillage()));
 				if (attackableArea.Count() >= 1) {
-					this.target = facility;
-					return attackableArea.Select(goalPos => new AStarPathFinder(village.GetDetailMap(), goalPos, aqPoint))
-						.WhereMin(astar => astar.Cost).Select(astar => astar.Path).First().GetEnumerator();
+					foreach(var astar in attackableArea.Select(goalPos => new AStarPathFinder(village.GetDetailMap(), goalPos, aqPoint, 80))
+						.Where(astar=>astar.Path!=null).WhereMin(astar => astar.Cost)) {
+						this.target = facility;
+						Console.Out.WriteLine("astar cost:"+astar.Cost);
+						return astar.Path.GetEnumerator();
+					}
 				}
 			}
 			Console.Out.WriteLine("最短3つは攻撃不可");
 			return null; // 最短3つは攻撃不可*/
-			var closedTuple = SeachClosedAStarPath().WhereMin(t => t.Item2.Cost).First();
+			
+			var closedTuples = SeachClosedAStarPath().WhereMin(t => t.Item2.Cost);
+			if(closedTuples.Count()==0) {
+				Console.Out.WriteLine("経路無し");
+				return null;
+			}
+
+			var closedTuple = closedTuples.First();
+			if (closedTuples.Count() >= 2) {
+				Console.Out.Write("等距離の移動経路を検出。計算結果が変わる可能性があります cost:" + closedTuple.Item2.Cost);
+				foreach(var t in closedTuples) {
+					Console.Out.Write(" "+t.Item1.FacilityID);
+				}
+				Console.Out.WriteLine("");
+			}
 			this.target = closedTuple.Item1;
 			return closedTuple.Item2.Path.GetEnumerator();
 		}
 
 		private IEnumerable<Tuple<Facility,AStarPathFinder>> SeachClosedAStarPath() {
-			foreach (var facility in village.SearchClosedFacilityDetailPoints(this.AQDetailPoint, 3)) {
+			foreach (var facility in village.SearchClosedFacility(this.AQElementPoint, 3)) {
 				IEnumerable<GridPoint> attackableArea = facility.GetAllRangeDetailPoints(AQRange).Intersect(
 					village.GetReachableMap().GetAllReachable(this.AQVillagePoint).SelectMany(p => p.GetDetailsFromVillage()));
 				if (attackableArea.Count() >= 1) {
-					this.target = facility;
-					foreach(var astar in attackableArea.Select(goalPos => new AStarPathFinder(village.GetDetailMap(), goalPos, aqPoint))) {
+					foreach(var astar in attackableArea.Select(goalPos => new AStarPathFinder(village.GetDetailMap(), goalPos, aqPoint, 80)).Where(astar=>astar.Path!= null)) {
+						this.target = facility;
 						yield return Tuple.Create(facility,astar);
 					}
 				}

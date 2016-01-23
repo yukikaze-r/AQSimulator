@@ -20,6 +20,7 @@ namespace AQSimulator {
 		private readonly GridPoint startPos;
 		private readonly GridPoint goalPos;
 		private readonly SearchTarget searchTarget;
+		private readonly int limitCost;
 
 		private List<GridPoint> path;
 		private int pathCost;
@@ -30,10 +31,11 @@ namespace AQSimulator {
 		private GridPoint[,] parents;
 		private int[,] fstars;
 		
-		public AStarPathFinder(SearchTarget searchTarget, GridPoint goalPos, GridPoint startPos) {
+		public AStarPathFinder(SearchTarget searchTarget, GridPoint goalPos, GridPoint startPos, int limitCost = int.MaxValue) {
 			this.searchTarget = searchTarget;
 			this.startPos = startPos;
 			this.goalPos = goalPos;
+			this.limitCost = limitCost;
 			this.path = null;
 			sortedOpens.Clear();
 
@@ -120,6 +122,9 @@ namespace AQSimulator {
 			}
 
 			int fdash = gstar + GetHeuris(m) + cost;
+			if(fdash > limitCost) {
+				return;
+			}
 			if (opens[mx,my] == false && closed[mx,my] == false) {
 				sortedOpens.Add(fdash, m);
 				fstars[mx,my] = fdash;

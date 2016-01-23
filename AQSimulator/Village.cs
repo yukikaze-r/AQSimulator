@@ -120,6 +120,7 @@ namespace AQSimulator {
 			return elem;
 		}
 
+		/*
 		public IEnumerable<Facility> SearchClosedFacilityDetailPoints(GridPoint detailPoint, int limitCount) {
 //			Console.Out.WriteLine("SearchClosedFacilityDetailPoints");
 			SortedList <int, Facility> closedList = new SortedList<int, Facility>();
@@ -138,9 +139,48 @@ namespace AQSimulator {
 					}
 				}
 			}
+
+			foreach (var f in closedList) {
+				Console.Out.Write(" " + f.Value.FacilityID + "(" + Math.Sqrt(f.Key) + ")");
+			}
+			Console.Out.WriteLine("");
+
+
 			return closedList.Values;
 		}
+		*/
 
+		public IEnumerable<Facility> SearchClosedFacility(ElementPoint elementPoint, int limitCount) {
+			//			Console.Out.WriteLine("SearchClosedFacilityDetailPoints");
+			SortedList<float, List<Facility>> closedList = new SortedList<float, List<Facility>>();
+			foreach (var facility in facilities) {
+				foreach (var elementPointDistance in facility.GetAllPoints().Select(p => p.GetElementPointFromVillage())
+					.Select(p => new Tuple<ElementPoint,float>(p, p.SqrDistance(elementPoint) )).WhereMin(d => d.Item2)) {
+					//					Console.Out.WriteLine("facility:"+facility.GetAllPoints().Count()+" sqrDistance:"+gridPointDistance.SqrDistance);
+					if (closedList.ContainsKey(elementPointDistance.Item2) == false) {
+						closedList.Add(elementPointDistance.Item2, new List<Facility>(new Facility[] { facility }));
+					} else {
+						closedList[elementPointDistance.Item2].Add(facility);
+					}
+					if (closedList.Count > limitCount) {
+						closedList.Remove(closedList.Keys.Last());
+					}
+				}
+			}
+
+			foreach (var c in closedList) {
+				if(c.Value.Count()>=2) {
+					Console.Out.Write(" 等距離の施設を検出。計算結果が変わる可能性があります");
+				}
+				foreach (var f in c.Value) {
+					Console.Out.Write(" " + f.FacilityID+"(" + c.Key + ")");
+				}
+			}
+			Console.Out.WriteLine("");
+
+			return closedList.Values.SelectMany(l=>l);
+		}
+		/*
 		public IEnumerable<Facility> SearchClosedFacility(ElementPoint elementPoint, int limitCount) {
 			SortedList<float, Facility> closedList = new SortedList<float, Facility>();
 			foreach (var facility in facilities) {
@@ -162,6 +202,7 @@ namespace AQSimulator {
 
 			return closedList.Values;
 		}
+		*/
 
 		private struct GridPointDistance {
 			public GridPoint GP;
@@ -229,6 +270,16 @@ namespace AQSimulator {
 			}
 		}
 
+
+		public ElementPoint GetElementPointFromVillage() {
+			return new ElementPoint(X + 0.5f, Y + 0.5f);
+		}
+
+
+		public ElementPoint GetElementPointFromDetail() {
+			return new ElementPoint(X * 0.5f + 0.25f, Y * 0.5f + 0.25f);
+		}
+
 		public GridPoint GetVillageFromDetail() {
 			return new GridPoint(X / 2, Y / 2);
 		}
@@ -244,6 +295,11 @@ namespace AQSimulator {
 	public struct ElementPoint {
 		public float X;
 		public float Y;
+
+		public ElementPoint(float x, float y) {
+			X = x;
+			Y = y;
+		}
 
 		public float SqrDistance(ElementPoint p) {
 			float dx = p.X - X;

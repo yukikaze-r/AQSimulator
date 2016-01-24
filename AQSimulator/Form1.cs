@@ -231,6 +231,9 @@ namespace AQSimulator {
 			if (facility5x5Button.Checked) {
 				return CommonFacilityType.Instance5x5;
 			}
+			if (eagleButton.Checked) {
+				return CommonFacilityType.InstanceEagle;
+			}
 			return null;
 		}
 

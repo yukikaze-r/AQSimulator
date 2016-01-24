@@ -309,42 +309,6 @@ namespace AQSimulator {
 	}
 
 	[Serializable]
-	public abstract class GridElementType {
-		protected int sizeX;
-		protected int sizeY;
-
-		public int SizeX {
-			get {
-				return sizeX;
-			}
-		}
-
-		public int SizeY {
-			get {
-				return sizeY;
-			}
-		}
-
-		public abstract GridElement Create();
-
-
-		public IEnumerable<GridPoint> GetAllPoints(GridPoint gridPoint) {
-			for (int i = 0; i < SizeX; i++) {
-				for (int j = 0; j < SizeY; j++) {
-					yield return new GridPoint(gridPoint.X + i, gridPoint.Y + j);
-				}
-			}
-		}
-	}
-
-	[Serializable]
-	public class GridElementType<T> : GridElementType where T : GridElement<T>, new() {
-		public override GridElement Create() {
-			return new T() { GridElementType = this };
-		}
-	}
-
-	[Serializable]
 	public abstract class GridElement {
 		private GridPoint gridPoint;
 
@@ -366,6 +330,10 @@ namespace AQSimulator {
 			}
 		}
 
+		public GridPoint GetCenterDetailPoint() {
+			return new GridPoint(gridPoint.X * 2 + this.Type.SizeX, gridPoint.Y * 2 + this.Type.SizeY);
+		}
+
 		public abstract GridElementType Type {
 			get;
 		}
@@ -375,20 +343,77 @@ namespace AQSimulator {
 		}
 
 		public IEnumerable<GridPoint> GetAllRangeDetailPoints(int range) {
-			HashSet<GridPoint> result = new HashSet<GridPoint>();
-			foreach(var vp in GetAllPoints()) {
-				foreach(var dp in new RangeMatrix(range,0.5f,0.5f).GetPointsOriginMinus0505()) {
-					result.Add(new GridPoint(vp.X * 2 + 1, vp.Y * 2 + 1) + dp);
-				}
+			var aqRangeMatrix = this.Type.AQRangeMatrix;
+			if (aqRangeMatrix == null) {
+				HashSet<GridPoint> result = new HashSet<GridPoint>();
+				foreach (var vp in GetAllPoints()) {
+					foreach (var dp in new RangeMatrix(range, 0.5f, 0.5f).GetPointsOriginMinus0505()) {
+						result.Add(new GridPoint(vp.X * 2 + 1, vp.Y * 2 + 1) + dp);
+					}
 
+				}
+				foreach (var e in result) {
+					yield return e;
+				}
+			} else {
+				var centerDP = GetCenterDetailPoint();
+				for (int x = 0; x < aqRangeMatrix.GetLength(0); x++) {
+					for (int y = 0; y < aqRangeMatrix.GetLength(1); y++) {
+						if (aqRangeMatrix[x, y] != 0) {
+							GridPoint result;
+							result = centerDP;
+							result.X += x;
+							result.Y += y;
+							yield return result;
+							result = centerDP;
+							result.X -= x + 1;
+							result.Y += y;
+							yield return result;
+							result = centerDP;
+							result.X += x;
+							result.Y -= y + 1;
+							yield return result;
+							result = centerDP;
+							result.X -= x + 1;
+							result.Y -= y + 1;
+							yield return result;
+						}
+					}
+				}
 			}
-			return result;
 		}
 	}
 
 	[Serializable]
 	public class GridElement<T> : GridElement where T : GridElement<T>, new() {
+//		[NonSerialized]
 		private GridElementType<T> gridElementType;
+
+		private String typeId;
+
+
+		[OnDeserialized]
+		private void SetValuesOnDeserialized(StreamingContext context) {
+			if(typeId == null) {
+				if (gridElementType is WallType) {
+					gridElementType = AQSimulator.GridElementType.TypeDictionary["Wall"] as GridElementType<T>;
+				}
+				if(gridElementType is CommonFacilityType) {
+					if (gridElementType.SizeX == 2) {
+						gridElementType = AQSimulator.GridElementType.TypeDictionary["2x2"] as GridElementType<T>;
+					}
+					if (gridElementType.SizeX == 3) {
+						gridElementType = AQSimulator.GridElementType.TypeDictionary["3x3"] as GridElementType<T>;
+					}
+					if (gridElementType.SizeX == 4) {
+						gridElementType = AQSimulator.GridElementType.TypeDictionary["4x4"] as GridElementType<T>;
+					}
+				}
+			}
+			else {
+				gridElementType = AQSimulator.GridElementType.TypeDictionary[typeId] as GridElementType<T>;
+			}
+		}
 
 		public override GridElementType Type {
 			get {
@@ -399,6 +424,7 @@ namespace AQSimulator {
 		internal GridElementType<T> GridElementType {
 			set {
 				gridElementType = value;
+				typeId = gridElementType.TypeId;
 			}
 		}
 	}
@@ -407,15 +433,6 @@ namespace AQSimulator {
 	public class Wall : GridElement<Wall> {
 	}
 
-	[Serializable]
-	public class WallType : GridElementType<Wall> {
-		public static WallType Instance = new WallType();
-
-		private WallType() {
-			sizeX = 1;
-			sizeY = 1;
-		}
-	}
 
 	[Serializable]
 	public class Facility : GridElement<Facility> {
@@ -436,60 +453,37 @@ namespace AQSimulator {
 	}
 
 	[Serializable]
-	public class CommonFacilityType : GridElementType<Facility> {
-		public static CommonFacilityType Instance2x2 = new CommonFacilityType(2,2,
-			new int[,] {
-				{0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
-				{1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
+	public abstract class GridElementType {
+		[NonSerialized]
+		public static Dictionary<string, GridElementType> TypeDictionary = new Dictionary<string, GridElementType>();
 
-				{1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
-				{1,1, 1,1, 1,1, 1,1, 0,0, 0,0,},
+		private String typeId;
 
-				{1,1, 1,1, 1,1, 1,1, 1,0, 0,0,},
-				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+		protected int sizeX;
+		protected int sizeY;
+		protected int[,] aqRangeMatrix;
 
-				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
-				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+		public GridElementType(String id) {
+			typeId = id;
+			TypeDictionary[id] = this;
+		}
 
-				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
-				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
-
-				{2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
-				{2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+		public String TypeId {
+			get {
+				return typeId;
 			}
-		);
+		}
 
-		public static CommonFacilityType Instance3x3 = new CommonFacilityType(3,3,
-			new int[,] {
-				{0,0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
-				{1,1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
-
-				{1,1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
-				{1,1,1, 1,1, 1,1, 1,1, 0,0, 0,0,},
-
-				{1,1,1, 1,1, 1,1, 1,1, 1,0, 0,0,},
-				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
-
-				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
-				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
-
-				{1,1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
-				{1,1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
-
-				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
-				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
-				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+		public int SizeX {
+			get {
+				return sizeX;
 			}
-			);
-		public static CommonFacilityType Instance4x4 = new CommonFacilityType(4,4);
-		public static CommonFacilityType Instance5x5 = new CommonFacilityType(5,5);
+		}
 
-		private int[,] aqRangeMatrix;
-
-		private CommonFacilityType(int wx, int wy, int[,] aqRangeMatrix = null) {
-			sizeX = wx;
-			sizeY = wy;
-			this.aqRangeMatrix = aqRangeMatrix;
+		public int SizeY {
+			get {
+				return sizeY;
+			}
 		}
 
 		public int[,] AQRangeMatrix {
@@ -497,5 +491,116 @@ namespace AQSimulator {
 				return aqRangeMatrix;
 			}
 		}
+
+		public abstract GridElement Create();
+
+
+		public IEnumerable<GridPoint> GetAllPoints(GridPoint gridPoint) {
+			for (int i = 0; i < SizeX; i++) {
+				for (int j = 0; j < SizeY; j++) {
+					yield return new GridPoint(gridPoint.X + i, gridPoint.Y + j);
+				}
+			}
+		}
+	}
+
+	[Serializable]
+	public class GridElementType<T> : GridElementType where T : GridElement<T>, new() {
+		public GridElementType(String id) : base(id) {
+		}
+
+		public override GridElement Create() {
+			return new T() { GridElementType = this };
+		}
+	}
+
+	[Serializable]
+	public class WallType : GridElementType<Wall> {
+		public static WallType Instance = new WallType();
+
+		private WallType() : base("Wall") {
+			sizeX = 1;
+			sizeY = 1;
+		}
+	}
+
+	[Serializable]
+	public class CommonFacilityType : GridElementType<Facility> {
+		public static CommonFacilityType Instance2x2 = new CommonFacilityType("2x2", 2,2,
+			new int[,] {
+				{2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+				{1,1, 1,1, 1,1, 1,1, 1,0, 0,0,},
+
+				{1,1, 1,1, 1,1, 1,1, 0,0, 0,0,},
+				{1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
+
+				{1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
+				{0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
+			}
+		);
+
+		public static CommonFacilityType Instance3x3 = new CommonFacilityType("3x3", 3,3,
+			new int[,] {
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 1,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 1,1, 0,0,},
+				{1,1,1, 1,1, 1,1, 1,1, 1,0, 0,0,},
+
+				{1,1,1, 1,1, 1,1, 1,1, 0,0, 0,0,},
+				{1,1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
+
+				{1,1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
+				{0,0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
+			}
+			);
+
+		public static CommonFacilityType InstanceEagle = new CommonFacilityType("Eagle", 4, 4,
+			new int[,] {
+				{2,2 ,2,2, 1,1, 1,1, 1,1, 1,1, },
+				{2,2 ,2,2, 1,1, 1,1, 1,1, 1,1, },
+
+				{2,2 ,2,2, 1,1, 1,1, 1,1, 1,1, },
+				{2,2 ,2,2, 1,1, 1,1, 1,1, 1,1, },
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0, },
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0, },
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 1,0, },
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0, },
+
+				{1,1, 1,1, 1,1, 1,1, 1,1, 0,0, },
+				{1,1, 1,1, 1,1, 1,1, 1,0, 0,0, },
+
+				{1,1, 1,1, 1,1, 1,0, 0,0, 0,0, },
+				{1,1, 1,1, 0,0, 0,0, 0,0, 0,0, },
+			}
+			);
+
+		public static CommonFacilityType Instance4x4 = new CommonFacilityType("4x4", 4, 4);
+		public static CommonFacilityType Instance5x5 = new CommonFacilityType("5x5", 5,5);
+		
+		private CommonFacilityType(String id, int wx, int wy, int[,] aqRangeMatrix = null) : base(id) {
+			sizeX = wx;
+			sizeY = wy;
+			this.aqRangeMatrix = aqRangeMatrix;
+		}
+
 	}
 }

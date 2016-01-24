@@ -113,7 +113,8 @@ namespace AQSimulator {
 				IEnumerable<GridPoint> attackableArea = facility.GetAllRangeDetailPoints(AQRange).Intersect(
 					village.GetReachableMap().GetAllReachable(this.AQVillagePoint).SelectMany(p => p.GetDetailsFromVillage()));
 				if (attackableArea.Count() >= 1) {
-					foreach(var astar in attackableArea.Select(goalPos => new AStarPathFinder(village.GetDetailMap(), goalPos, aqPoint, 80)).Where(astar=>astar.Path!= null)) {
+					// 直線距離が離れていた場合に除外なのかもしれない
+					foreach(var astar in attackableArea.Select(goalPos => new AStarPathFinder(village.GetDetailMap(), goalPos, aqPoint, 160)).Where(astar=>astar.Path!= null)) {
 						this.target = facility;
 						yield return Tuple.Create(facility,astar);
 					}

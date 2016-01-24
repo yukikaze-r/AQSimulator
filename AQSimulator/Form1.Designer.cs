@@ -35,6 +35,7 @@
 			this.NewFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.OpenFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.SaveFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.eagleButton = new System.Windows.Forms.RadioButton();
 			this.menuStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -43,7 +44,7 @@
 			this.wallButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.wallButton.Appearance = System.Windows.Forms.Appearance.Button;
 			this.wallButton.AutoSize = true;
-			this.wallButton.Location = new System.Drawing.Point(562, 803);
+			this.wallButton.Location = new System.Drawing.Point(505, 803);
 			this.wallButton.Name = "wallButton";
 			this.wallButton.Size = new System.Drawing.Size(27, 22);
 			this.wallButton.TabIndex = 0;
@@ -56,7 +57,7 @@
 			this.facility2x2Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.facility2x2Button.Appearance = System.Windows.Forms.Appearance.Button;
 			this.facility2x2Button.AutoSize = true;
-			this.facility2x2Button.Location = new System.Drawing.Point(595, 803);
+			this.facility2x2Button.Location = new System.Drawing.Point(538, 803);
 			this.facility2x2Button.Name = "facility2x2Button";
 			this.facility2x2Button.Size = new System.Drawing.Size(57, 22);
 			this.facility2x2Button.TabIndex = 1;
@@ -82,7 +83,7 @@
 			this.facility3x3Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.facility3x3Button.Appearance = System.Windows.Forms.Appearance.Button;
 			this.facility3x3Button.AutoSize = true;
-			this.facility3x3Button.Location = new System.Drawing.Point(658, 803);
+			this.facility3x3Button.Location = new System.Drawing.Point(601, 803);
 			this.facility3x3Button.Name = "facility3x3Button";
 			this.facility3x3Button.Size = new System.Drawing.Size(57, 22);
 			this.facility3x3Button.TabIndex = 3;
@@ -95,7 +96,7 @@
 			this.facility4x4Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.facility4x4Button.Appearance = System.Windows.Forms.Appearance.Button;
 			this.facility4x4Button.AutoSize = true;
-			this.facility4x4Button.Location = new System.Drawing.Point(721, 803);
+			this.facility4x4Button.Location = new System.Drawing.Point(664, 803);
 			this.facility4x4Button.Name = "facility4x4Button";
 			this.facility4x4Button.Size = new System.Drawing.Size(57, 22);
 			this.facility4x4Button.TabIndex = 4;
@@ -108,7 +109,7 @@
 			this.facility5x5Button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.facility5x5Button.Appearance = System.Windows.Forms.Appearance.Button;
 			this.facility5x5Button.AutoSize = true;
-			this.facility5x5Button.Location = new System.Drawing.Point(784, 803);
+			this.facility5x5Button.Location = new System.Drawing.Point(804, 803);
 			this.facility5x5Button.Name = "facility5x5Button";
 			this.facility5x5Button.Size = new System.Drawing.Size(57, 22);
 			this.facility5x5Button.TabIndex = 5;
@@ -150,28 +151,42 @@
 			// NewFileToolStripMenuItem
 			// 
 			this.NewFileToolStripMenuItem.Name = "NewFileToolStripMenuItem";
-			this.NewFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.NewFileToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
 			this.NewFileToolStripMenuItem.Text = "新規作成";
 			// 
 			// OpenFileToolStripMenuItem
 			// 
 			this.OpenFileToolStripMenuItem.Name = "OpenFileToolStripMenuItem";
-			this.OpenFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.OpenFileToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
 			this.OpenFileToolStripMenuItem.Text = "開く";
 			this.OpenFileToolStripMenuItem.Click += new System.EventHandler(this.OpenFileToolStripMenuItem_Click);
 			// 
 			// SaveFileToolStripMenuItem
 			// 
 			this.SaveFileToolStripMenuItem.Name = "SaveFileToolStripMenuItem";
-			this.SaveFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.SaveFileToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
 			this.SaveFileToolStripMenuItem.Text = "保存";
 			this.SaveFileToolStripMenuItem.Click += new System.EventHandler(this.SaveFileToolStripMenuItem_Click);
+			// 
+			// eagleButton
+			// 
+			this.eagleButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.eagleButton.Appearance = System.Windows.Forms.Appearance.Button;
+			this.eagleButton.AutoSize = true;
+			this.eagleButton.Location = new System.Drawing.Point(727, 803);
+			this.eagleButton.Name = "eagleButton";
+			this.eagleButton.Size = new System.Drawing.Size(65, 22);
+			this.eagleButton.TabIndex = 8;
+			this.eagleButton.TabStop = true;
+			this.eagleButton.Text = "イーグル砲";
+			this.eagleButton.UseVisualStyleBackColor = true;
 			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(989, 837);
+			this.Controls.Add(this.eagleButton);
 			this.Controls.Add(this.stepButton);
 			this.Controls.Add(this.facility5x5Button);
 			this.Controls.Add(this.facility4x4Button);
@@ -208,6 +223,7 @@
 		private System.Windows.Forms.ToolStripMenuItem SaveFileToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem OpenFileToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem NewFileToolStripMenuItem;
+		private System.Windows.Forms.RadioButton eagleButton;
 	}
 }
 

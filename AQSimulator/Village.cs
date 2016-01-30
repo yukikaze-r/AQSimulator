@@ -92,6 +92,10 @@ namespace AQSimulator {
 		}
 
 		public GridElement Build(GridPoint p, GridElementType elementType) {
+			if (this[p] != null) {
+				throw new Exception("already exists grid element");
+			}
+
 			GridElement t = elementType.Create();
 			t.GridPoint = p;
 			if (t.GetAllPoints().Count(gp=>this[gp]!=null) == 0) {
@@ -550,7 +554,7 @@ namespace AQSimulator {
 
 		public static CommonFacilityType Instance3x3 = new CommonFacilityType("3x3", 3,3,
 			new int[,] {
-				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
+				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,1,},
 				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
 				{2,2,2, 1,1, 1,1, 1,1, 1,1, 1,0,},
 
@@ -567,7 +571,7 @@ namespace AQSimulator {
 				{1,1,1, 1,1, 1,1, 1,0, 0,0, 0,0,},
 
 				{1,1,1, 1,1, 0,0, 0,0, 0,0, 0,0,},
-				{0,0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
+				{1,0,0, 0,0, 0,0, 0,0, 0,0, 0,0,},
 			}
 			);
 

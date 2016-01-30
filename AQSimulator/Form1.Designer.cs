@@ -145,7 +145,7 @@
             this.OpenFileToolStripMenuItem,
             this.SaveFileToolStripMenuItem});
 			this.ファイルToolStripMenuItem.Name = "ファイルToolStripMenuItem";
-			this.ファイルToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
+			this.ファイルToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
 			this.ファイルToolStripMenuItem.Text = "ファイル";
 			// 
 			// NewFileToolStripMenuItem
@@ -201,6 +201,7 @@
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
 			this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseClick);
+			this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
 			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
 			this.menuStrip1.ResumeLayout(false);
 			this.menuStrip1.PerformLayout();

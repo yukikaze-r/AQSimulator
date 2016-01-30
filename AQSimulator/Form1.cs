@@ -174,21 +174,24 @@ namespace AQSimulator {
 		}
 
 		private void Form1_MouseClick(object sender, MouseEventArgs e) {
+		}
+
+
+		private void Form1_MouseDown(object sender, MouseEventArgs e) {
+
 			GridPoint vp = GetVillagePointFromGraphicsPoint(new Point(e.X, e.Y));
-			if(village.IsValidGridPoint(vp)) {
-				if(aqButton.Checked) {
+			if (village.IsValidGridPoint(vp)) {
+				if (aqButton.Checked) {
 					simulator = new Simulator(village, GetDetailPointFromGraphicsPoint(new Point(e.X, e.Y)));
 					Invalidate(GetMinMaxRectangle(GetDetailGraphicsPoints(simulator.AQDetailPoint.X, simulator.AQDetailPoint.Y)));
-				}
-				else {
+				} else {
 					GridElement element;
 					if (village[vp.X, vp.Y] != null) {
 						element = village.Destroy(village[vp]);
-					}
-					else {
+					} else {
 						element = village.Build(vp, GetSelectedToolGridType());
 					}
-//					InvalidateGrids(element.Type, element.GridPoint);
+					//					InvalidateGrids(element.Type, element.GridPoint);
 				}
 			}
 		}
@@ -248,7 +251,18 @@ namespace AQSimulator {
 			GridPoint gp2 = GetVillagePointFromGraphicsPoint(oldMouseLocation);
 
 			GridElementType gridElementType = GetSelectedToolGridType();
+
+
 			if(gridElementType != null && !gp1.Equals(gp2)) {
+				if (gridElementType is WallType && (Control.MouseButtons & MouseButtons.Left) == MouseButtons.Left) {
+					if (village[gp1] == null) {
+						village.Build(gp1, gridElementType);
+					}
+					else {
+						village.Destroy(village[gp1]);
+					}
+				}
+
 				InvalidateGrids(gridElementType, gp1);
 				InvalidateGrids(gridElementType, gp2);
 			}
@@ -287,7 +301,7 @@ namespace AQSimulator {
 
 		private void OpenFileToolStripMenuItem_Click(object sender, EventArgs e) {
 			OpenFileDialog ofd = new OpenFileDialog();
-			ofd.FileName = "default.html";
+			ofd.FileName = "新しいファイル.village";
 			ofd.Filter =
 				"villageファイル(*.village)|*.village|すべてのファイル(*.*)|*.*";
 			ofd.FilterIndex = 1;
@@ -309,5 +323,6 @@ namespace AQSimulator {
 
 			}
 		}
+
 	}
 }
